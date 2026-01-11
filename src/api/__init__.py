@@ -1,0 +1,3 @@
+"""
+Beautelligence Web API
+"""

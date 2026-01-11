@@ -1,0 +1,155 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Sparkles, Wand2, Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+export const Generator = () => {
+    const [prompt, setPrompt] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [status, setStatus] = useState<string | null>(null);
+
+    const handleGenerate = async () => {
+        if (!prompt.trim()) return;
+
+        setIsGenerating(true);
+        setStatus('queueing');
+
+        try {
+            await axios.post('http://localhost:8000/api/generate', {
+                prompt,
+                force: true
+            });
+            setStatus('success');
+            setPrompt('');
+            // Ideally trigger refresh of status/gallery here
+        } catch (error) {
+            console.error(error);
+            setStatus('error');
+        } finally {
+            setIsGenerating(false);
+            setTimeout(() => setStatus(null), 3000);
+        }
+    };
+
+    return (
+        <section id="generator" className="py-20 container mx-auto px-4">
+            <div className="max-w-3xl mx-auto">
+                <motion.div
+                    className="bg-surface border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                >
+                    {/* Glow effect */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -z-10" />
+
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-primary/20 rounded-xl">
+                            <Wand2 className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-white">Generation Studio</h2>
+                            <p className="text-gray-400 text-sm">Turn your imagination into reality</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                                Prompt
+                            </label>
+                            <textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                placeholder={`Scene: A YouTuber sits in a studio with a ring light and camera.
+
+Sinhala: "ඔයාගේ video content එක next level එකට ගන්න කැමතිද?"
+
+Translation: "Want to take your video content to the next level?"
+
+Music: Youthful lo-fi beat
+
+Character: Alive Strawberry YouTube Content Creator`}
+                                className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[120px] resize-none transition-all"
+                            />
+                        </div>
+
+                        <div className="flex justify-end pt-4">
+                            <button
+                                onClick={handleGenerate}
+                                disabled={isGenerating || !prompt.trim()}
+                                className={`
+                  px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all
+                  ${isGenerating || !prompt.trim()
+                                        ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                                        : 'bg-primary hover:bg-blue-600 text-white shadow-lg shadow-primary/25'}
+                `}
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Generating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-5 h-5" />
+                                        Generate Video
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {status === 'success' && (
+                            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm text-center">
+                                ✨ Task started successfully! Check the status below.
+                            </div>
+                        )}
+                        {status === 'error' && (
+                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm text-center">
+                                ⚠️ Failed to start generation. Please check the API.
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+
+                {/* Sample Prompt Tile */}
+                <motion.div
+                    className="mt-8 bg-surface/50 border border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:border-primary/20 transition-colors cursor-pointer"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 }}
+                    onClick={() => {
+                        setPrompt(`Scene: A YouTuber sits in a studio with a ring light and camera.
+
+Sinhala: "ඔයාගේ video content එක next level එකට ගන්න කැමතිද?"
+
+Translation: "Want to take your video content to the next level?"
+
+Music: Youthful lo-fi beat
+
+Character: Alive Strawberry YouTube Content Creator`);
+                        window.scrollTo({ top: document.getElementById('generator')?.offsetTop, behavior: 'smooth' });
+                    }}
+                >
+                    <div className="absolute top-0 right-0 p-4 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded">CLICK TO TRY</span>
+                    </div>
+
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-secondary" />
+                        Sample Template
+                    </h3>
+
+                    <div className="bg-black/30 rounded-xl p-4 font-mono text-sm text-gray-400 whitespace-pre-wrap leading-relaxed border border-white/5">
+                        <span className="text-gray-500">Scene:</span> A YouTuber sits in a studio with a ring light and camera.<br /><br />
+                        <span className="text-gray-500">Sinhala:</span> "ඔයාගේ video content එක next level එකට ගන්න කැමතිද?"<br /><br />
+                        <span className="text-gray-500">Translation:</span> "Want to take your video content to the next level?"<br /><br />
+                        <span className="text-gray-500">Music:</span> Youthful lo-fi beat<br /><br />
+                        <span className="text-gray-500">Character:</span> Alive Strawberry YouTube Content Creator
+                    </div>
+                </motion.div>
+            </div>
+        </section>
+    );
+};
