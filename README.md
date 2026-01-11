@@ -1,7 +1,9 @@
 # Beautelligence Video Pipeline
 
 ## Project Overview
-**Beautelligence** is an automated AI video generation pipeline designed to create cute, 3D animated character videos for social media. It leverages advanced AI technologies to discover trending topics, generate creative prompts, and produce high-quality videos optimized for engagement.
+**Beautelligence** is your personal **AI Video Production Workflow** designed for digital creators who value consistency. It's not just a generation tool—it's an automated system that turns niche keywords into on-brand, viral-ready TikTok and YouTube content using **Google Veo 3** and **Gemini 2.0**.
+
+> **"Scale your personal brand with consistency. Transform one word into a production-ready video."**
 
 ### Key Features
 *   **Trend Discovery**: Automatically scrapes TikTok Creative Center for trending hashtags and topics.

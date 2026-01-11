@@ -22,12 +22,12 @@ export const Hero = () => {
                     </span>
 
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white/90 to-white/50">
-                        Create Magical Videos <br /> with AI
+                        Your Personal AI <br /> Video Production Team
                     </h1>
 
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        Generate stunning 3D animated character videos from simple text prompts.
-                        Automated trend discovery meets state-of-the-art video generation.
+                        Automated. Consistent. Brand-Aligned. <br />
+                        The ultimate workflow for digital creators to turn simple keywords into viral TikTok & YouTube content instantly.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">

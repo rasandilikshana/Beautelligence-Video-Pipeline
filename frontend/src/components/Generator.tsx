@@ -49,7 +49,12 @@ export const Generator = () => {
                         </div>
                         <div>
                             <h2 className="text-2xl font-bold text-white">Generation Studio</h2>
-                            <p className="text-gray-400 text-sm">Turn your imagination into reality</p>
+                            <div className="flex items-center gap-2">
+                                <p className="text-gray-400 text-sm">Turn your imagination into reality</p>
+                                <span className="px-2 py-0.5 rounded-full bg-secondary/10 border border-secondary/20 text-xs text-secondary font-mono">
+                                    Brand Safe Mode: Active
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -69,8 +74,22 @@ Translation: "Want to take your video content to the next level?"
 
 Music: Youthful lo-fi beat
 
-Character: Alive Strawberry YouTube Content Creator`}
-                                className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[120px] resize-none transition-all"
+Character: Alive Strawberry YouTube Content Creator character with big expressive cartoon eyes...
+
+Action: The Strawberry is enthusiastically gesturing with tiny, leafy hands...
+
+Setting: A miniature, brightly lit YouTube studio...
+
+Visual Style:
+- Soft studio lighting with subtle rim light
+- Glossy plastic-like texture with soft shadows
+- Vibrant and cheerful color palette
+- High-quality 3D render, Pixar-style animation quality
+
+Camera: Slow pan up
+Duration: 8 seconds
+Audio: Upbeat and youthful lo-fi music...`}
+                                className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[300px] resize-none transition-all font-mono text-sm"
                             />
                         </div>
 
@@ -128,7 +147,19 @@ Translation: "Want to take your video content to the next level?"
 
 Music: Youthful lo-fi beat
 
-Character: Alive Strawberry YouTube Content Creator`);
+Character: Alive Strawberry YouTube Content Creator character with big expressive cartoon eyes and a Excited, enthusiastic, helpful, and friendly. expression.
+
+The character is The Strawberry is enthusiastically gesturing with tiny, leafy hands while explaining something to the camera, occasionally pointing with a cheerful wiggle. It glances at its audience and nods encouragingly. in a A miniature, brightly lit YouTube studio with a tiny camera, ring light, computer, microphone, and trendy decorations like plants and a motivational poster..
+
+Visual Style:
+- Soft studio lighting with subtle rim light
+- Glossy plastic-like texture with soft shadows
+- Vibrant vibrant and cheerful color palette
+- High-quality 3D render, Pixar-style animation quality
+
+Camera: slow pan up
+Duration: 8 seconds
+Audio: Upbeat and youthful lo-fi music with a slight Sinhalese influence. Sound effects include a gentle 'ding' when the text appears and a subtle click of a camera shutter.`);
                         window.scrollTo({ top: document.getElementById('generator')?.offsetTop, behavior: 'smooth' });
                     }}
                 >
@@ -141,12 +172,21 @@ Character: Alive Strawberry YouTube Content Creator`);
                         Sample Template
                     </h3>
 
-                    <div className="bg-black/30 rounded-xl p-4 font-mono text-sm text-gray-400 whitespace-pre-wrap leading-relaxed border border-white/5">
-                        <span className="text-gray-500">Scene:</span> A YouTuber sits in a studio with a ring light and camera.<br /><br />
-                        <span className="text-gray-500">Sinhala:</span> "ඔයාගේ video content එක next level එකට ගන්න කැමතිද?"<br /><br />
-                        <span className="text-gray-500">Translation:</span> "Want to take your video content to the next level?"<br /><br />
-                        <span className="text-gray-500">Music:</span> Youthful lo-fi beat<br /><br />
-                        <span className="text-gray-500">Character:</span> Alive Strawberry YouTube Content Creator
+                    <div className="bg-black/30 rounded-xl p-4 font-mono text-xs text-gray-400 whitespace-pre-wrap leading-relaxed border border-white/5 h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                        <span className="text-secondary font-bold block mb-1">Scene:</span> A YouTuber sits in a studio with a ring light and camera.<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Sinhala:</span> "ඔයාගේ video content එක next level එකට ගන්න කැමතිද?"<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Translation:</span> "Want to take your video content to the next level?"<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Music:</span> Youthful lo-fi beat<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Character:</span> Alive Strawberry YouTube Content Creator character with big expressive cartoon eyes...<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Action:</span> The Strawberry is enthusiastically gesturing with tiny, leafy hands while explaining something to the camera...<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Setting:</span> A miniature, brightly lit YouTube studio with a tiny camera...<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Visual Style:</span>
+                        - Soft studio lighting<br />
+                        - Glossy plastic-like texture<br />
+                        - Vibrant color palette<br />
+                        - High-quality 3D render<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Camera:</span> slow pan up<br /><br />
+                        <span className="text-secondary font-bold block mb-1">Audio:</span> Upbeat and youthful lo-fi music...
                     </div>
                 </motion.div>
             </div>
