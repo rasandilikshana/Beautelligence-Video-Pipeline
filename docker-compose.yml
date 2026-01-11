@@ -1,0 +1,97 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: beautelligence-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: beautelligence
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: beautelligence_pipeline
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beautelligence -d beautelligence_pipeline"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Pipeline Runner (one-shot execution)
+  runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: beautelligence-runner
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://beautelligence:password@postgres:5432/beautelligence_pipeline
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      LOG_LEVEL: INFO
+      APP_ENV: production
+    volumes:
+      - ./data/videos:/app/data/videos
+      - ./data/prompts:/app/data/prompts
+      - ./data/logs:/app/data/logs
+    command: ["python", "main.py", "run"]
+
+  # Development mode with mounted source
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: beautelligence-dev
+    profiles:
+      - development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://beautelligence:password@postgres:5432/beautelligence_pipeline
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      LOG_LEVEL: DEBUG
+      APP_ENV: development
+      APP_DEBUG: "true"
+    volumes:
+      - .:/app
+      - ./data/videos:/app/data/videos
+      - ./data/prompts:/app/data/prompts
+      - ./data/logs:/app/data/logs
+    command: ["python", "main.py", "test"]
+
+  # Scheduler for automated runs (optional)
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: beautelligence-scheduler
+    profiles:
+      - scheduled
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://beautelligence:password@postgres:5432/beautelligence_pipeline
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      LOG_LEVEL: INFO
+      APP_ENV: production
+    volumes:
+      - ./data/videos:/app/data/videos
+      - ./data/prompts:/app/data/prompts
+      - ./data/logs:/app/data/logs
+    # Run daily at 6 AM UTC
+    command: >
+      sh -c "while true; do
+        echo 'Waiting for next scheduled run...';
+        sleep 86400;
+        python main.py run;
+      done"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
