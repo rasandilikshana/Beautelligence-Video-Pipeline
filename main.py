@@ -302,6 +302,242 @@ def config() -> None:
 
 
 @app.command()
+@async_command
+async def tasks(
+    status_filter: Optional[str] = typer.Option(
+        None, "--status", "-s", help="Filter by status (pending, used, skipped, all)"
+    ),
+    limit: int = typer.Option(20, "--limit", "-l", help="Max tasks to show"),
+) -> None:
+    """View pending and completed tasks/keywords."""
+    setup_logging(settings.log_level)
+
+    from src.models.database import get_session
+    from src.models.keyword import Keyword
+    from src.models.generation import Generation
+    from sqlalchemy import select, desc
+
+    console.print(
+        Panel.fit(
+            "📋 [bold blue]Task Queue[/bold blue]",
+            border_style="blue",
+        )
+    )
+
+    async with get_session() as session:
+        # Keywords query
+        query = select(Keyword).order_by(desc(Keyword.created_at)).limit(limit)
+        if status_filter and status_filter != "all":
+            query = query.where(Keyword.status == status_filter)
+        
+        result = await session.execute(query)
+        keywords = result.scalars().all()
+
+        if not keywords:
+            console.print("\n[yellow]No tasks found.[/yellow]")
+            return
+
+        # Keywords table
+        kw_table = Table(title="Keywords Queue")
+        kw_table.add_column("#", style="dim")
+        kw_table.add_column("Keyword", style="cyan")
+        kw_table.add_column("Status", style="magenta")
+        kw_table.add_column("Source", style="green")
+        kw_table.add_column("Score", style="yellow")
+        kw_table.add_column("Created", style="dim")
+
+        for i, kw in enumerate(keywords, 1):
+            status_style = {
+                "pending": "[yellow]pending[/yellow]",
+                "used": "[green]used[/green]",
+                "skipped": "[red]skipped[/red]",
+            }.get(kw.status, kw.status)
+            
+            created = kw.created_at.strftime("%Y-%m-%d %H:%M") if kw.created_at else "N/A"
+            kw_table.add_row(
+                str(i),
+                kw.keyword,
+                status_style,
+                kw.source or "manual",
+                str(kw.trending_score or 0),
+                created,
+            )
+
+        console.print(kw_table)
+
+        # Recent generations
+        gen_query = select(Generation).order_by(desc(Generation.created_at)).limit(10)
+        gen_result = await session.execute(gen_query)
+        generations = gen_result.scalars().all()
+
+        if generations:
+            gen_table = Table(title="Recent Generations")
+            gen_table.add_column("Status", style="magenta")
+            gen_table.add_column("File", style="cyan")
+            gen_table.add_column("Size", style="yellow")
+            gen_table.add_column("Created", style="dim")
+
+            for gen in generations:
+                status_style = {
+                    "complete": "[green]✓ complete[/green]",
+                    "pending": "[yellow]⏳ pending[/yellow]",
+                    "failed": "[red]✗ failed[/red]",
+                }.get(gen.status, gen.status)
+                
+                file_name = gen.video_file_path.split("/")[-1] if gen.video_file_path else "N/A"
+                size = f"{gen.file_size_bytes:,}" if gen.file_size_bytes else "-"
+                created = gen.created_at.strftime("%Y-%m-%d %H:%M") if gen.created_at else "N/A"
+                
+                gen_table.add_row(status_style, file_name, size, created)
+
+            console.print(gen_table)
+
+
+@app.command()
+@async_command
+async def queue(
+    keywords: list[str] = typer.Argument(..., help="Keywords to add to queue"),
+    score: int = typer.Option(100, "--score", "-s", help="Trending score (1-100)"),
+) -> None:
+    """Add keywords to the processing queue."""
+    setup_logging(settings.log_level)
+
+    from src.models.database import get_session
+    from src.models.keyword import Keyword
+
+    console.print(f"\n📥 Adding {len(keywords)} keyword(s) to queue...")
+
+    async with get_session() as session:
+        added = 0
+        for kw in keywords:
+            try:
+                keyword_obj = Keyword.create(
+                    keyword=kw,
+                    source="manual_queue",
+                    score=score,
+                )
+                session.add(keyword_obj)
+                added += 1
+            except Exception as e:
+                console.print(f"  [yellow]⚠ Skipped '{kw}': {e}[/yellow]")
+
+        await session.commit()
+
+    console.print(f"\n✅ Added {added} keyword(s) to queue")
+    console.print("   Run 'python main.py service' or 'python main.py run' to process them")
+
+
+@app.command()
+@async_command
+async def service(
+    interval: int = typer.Option(
+        3600, "--interval", "-i", help="Seconds between runs (default: 1 hour)"
+    ),
+    videos_per_run: int = typer.Option(
+        1, "--videos", "-v", help="Videos to generate per run"
+    ),
+    mock: bool = typer.Option(
+        False, "--mock", "-m", help="Use mock services (no API calls)"
+    ),
+) -> None:
+    """Run as a background service with scheduled execution.
+    
+    This runs the pipeline continuously at specified intervals.
+    Press Ctrl+C to stop.
+    
+    Example:
+        python main.py service --interval 3600 --videos 2
+        (generates 2 videos every hour)
+    """
+    setup_logging(settings.log_level, settings.log_dir)
+
+    from src.orchestrator.pipeline import VideoPipeline
+    import signal
+    import sys
+    from datetime import datetime
+
+    running = True
+
+    def signal_handler(sig, frame):
+        nonlocal running
+        console.print("\n\n🛑 [yellow]Stopping service...[/yellow]")
+        running = False
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    console.print(
+        Panel.fit(
+            "🔄 [bold blue]Video Pipeline Service[/bold blue]\n"
+            f"Mode: {'[yellow]MOCK[/yellow]' if mock else '[green]LIVE[/green]'}\n"
+            f"Interval: {interval} seconds ({interval // 60} minutes)\n"
+            f"Videos per run: {videos_per_run}\n\n"
+            "[dim]Press Ctrl+C to stop[/dim]",
+            border_style="blue",
+        )
+    )
+
+    run_count = 0
+    total_videos = 0
+    total_errors = 0
+
+    while running:
+        run_count += 1
+        start_time = datetime.now()
+
+        console.print(f"\n▶️  [bold]Run #{run_count}[/bold] - {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        try:
+            pipeline = VideoPipeline(mock=mock)
+            await pipeline.initialize()
+
+            with console.status("[bold green]Processing..."):
+                result = await pipeline.run(video_count=videos_per_run)
+
+            total_videos += result.videos_generated
+            total_errors += len(result.errors)
+
+            if result.success:
+                console.print(f"   ✅ Generated {result.videos_generated} video(s)")
+            else:
+                console.print(f"   ⚠️ Completed with {len(result.errors)} error(s)")
+
+            for detail in result.details[:3]:
+                console.print(f"      • {detail.get('keyword', 'N/A')}: {detail.get('video_path', 'failed')}")
+
+        except Exception as e:
+            console.print(f"   ❌ Error: {e}")
+            total_errors += 1
+
+        # Show summary
+        elapsed = (datetime.now() - start_time).total_seconds()
+        console.print(f"   ⏱️  Completed in {elapsed:.1f}s")
+
+        # Service stats
+        stats_table = Table(show_header=False, box=None)
+        stats_table.add_column("", style="dim")
+        stats_table.add_column("", style="cyan")
+        stats_table.add_row("Total runs:", str(run_count))
+        stats_table.add_row("Total videos:", str(total_videos))
+        stats_table.add_row("Total errors:", str(total_errors))
+        console.print(stats_table)
+
+        if not running:
+            break
+
+        # Wait for next run
+        next_run = datetime.now().timestamp() + interval
+        console.print(f"\n⏳ Next run in {interval} seconds ({interval // 60} min)...")
+
+        while running and datetime.now().timestamp() < next_run:
+            await asyncio.sleep(1)
+
+    console.print("\n✅ [bold green]Service stopped gracefully[/bold green]")
+    console.print(f"   Total runs: {run_count}")
+    console.print(f"   Total videos: {total_videos}")
+
+
+@app.command()
 def version() -> None:
     """Show version information."""
     console.print("\n🎬 [bold blue]Beautelligence Video Pipeline[/bold blue]")
@@ -312,3 +548,4 @@ def version() -> None:
 
 if __name__ == "__main__":
     app()
+

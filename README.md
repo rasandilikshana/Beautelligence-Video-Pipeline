@@ -86,15 +86,69 @@ python main.py status
 | Command | Description |
 |---------|-------------|
 | `python main.py init` | Initialize database and directories |
-| `python main.py test` | Test pipeline with mock data |
+| `python main.py run` | Discover trends and generate videos |
+| `python main.py run --mock` | Run with mock services (no API calls) |
 | `python main.py single "keyword"` | Generate video for specific keyword |
 | `python main.py single "keyword" --force` | Force regenerate even if exists |
-| `python main.py single "keyword" --mock` | Test without API calls |
-| `python main.py run` | Discover trends and generate videos |
-| `python main.py run --mock` | Run with mock services |
+| `python main.py test` | Quick test with mock data |
 | `python main.py status` | Show pipeline and quota status |
+| `python main.py tasks` | **View task queue and generations** |
+| `python main.py tasks --status pending` | Filter tasks by status |
+| `python main.py queue "kw1" "kw2"` | **Add keywords to queue** |
+| `python main.py service` | **Run as background service** |
+| `python main.py service --interval 1800` | Run every 30 minutes |
 | `python main.py config` | Display current configuration |
 | `python main.py version` | Show version information |
+
+## 🔄 Service Mode (Background Execution)
+
+Run the pipeline as a continuous background service:
+
+```bash
+# Default: Run every hour, 1 video per run
+python main.py service
+
+# Custom: Run every 30 minutes, 2 videos per run
+python main.py service --interval 1800 --videos 2
+
+# Test mode (no API calls)
+python main.py service --mock
+```
+
+### Service Features:
+- **Scheduled execution** - Runs at specified intervals
+- **Graceful shutdown** - Press Ctrl+C to stop cleanly
+- **Statistics tracking** - Shows total runs, videos, errors
+- **Auto-retry** - Handles temporary failures
+
+### Run as System Service (Linux)
+
+Create a systemd service file `/etc/systemd/system/beautelligence.service`:
+
+```ini
+[Unit]
+Description=Beautelligence Video Pipeline
+After=network.target
+
+[Service]
+Type=simple
+User=your_username
+WorkingDirectory=/path/to/project
+ExecStart=/path/to/venv/bin/python main.py service --interval 3600
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then enable and start:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable beautelligence
+sudo systemctl start beautelligence
+sudo systemctl status beautelligence
+```
 
 ## 🏗️ Architecture
 
