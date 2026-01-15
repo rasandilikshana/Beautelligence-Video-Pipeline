@@ -1,9 +1,16 @@
+import { useState } from 'react';
 import { Hero } from './components/Hero';
 import { Generator } from './components/Generator';
+import { FruitStoryGenerator } from './components/FruitStoryGenerator';
 import { Status } from './components/Status';
 import { Gallery } from './components/Gallery';
+import { Wand2, Heart } from 'lucide-react';
+
+type GeneratorMode = 'prompt' | 'story';
 
 function App() {
+  const [mode, setMode] = useState<GeneratorMode>('story');
+
   return (
     <div className="min-h-screen bg-background text-white selection:bg-primary/30">
       <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
@@ -25,7 +32,47 @@ function App() {
       <main>
         <Hero />
         <Status />
-        <Generator />
+
+        {/* Mode Toggle Tabs */}
+        <div className="container mx-auto px-4 -mb-8">
+          <div className="max-w-3xl mx-auto flex justify-center">
+            <div className="inline-flex bg-surface border border-white/10 rounded-2xl p-1.5">
+              <button
+                onClick={() => setMode('story')}
+                className={`
+                  px-6 py-3 rounded-xl font-medium text-sm flex items-center gap-2 transition-all
+                  ${mode === 'story'
+                    ? 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-white border border-pink-500/30'
+                    : 'text-gray-400 hover:text-white'
+                  }
+                `}
+              >
+                <Heart className="w-4 h-4" />
+                🍎 Story Mode
+                <span className="px-1.5 py-0.5 rounded text-xs bg-green-500/20 text-green-400 ml-1">NEW</span>
+              </button>
+              <button
+                onClick={() => setMode('prompt')}
+                className={`
+                  px-6 py-3 rounded-xl font-medium text-sm flex items-center gap-2 transition-all
+                  ${mode === 'prompt'
+                    ? 'bg-primary/20 text-white border border-primary/30'
+                    : 'text-gray-400 hover:text-white'
+                  }
+                `}
+              >
+                <Wand2 className="w-4 h-4" />
+                📝 Prompt Mode
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Conditional Generator Display */}
+        <div id="generator">
+          {mode === 'story' ? <FruitStoryGenerator /> : <Generator />}
+        </div>
+
         <div id="gallery">
           <Gallery />
         </div>
@@ -39,3 +86,4 @@ function App() {
 }
 
 export default App;
+

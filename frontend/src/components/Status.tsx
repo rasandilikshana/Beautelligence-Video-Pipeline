@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Activity, Database, CheckCircle } from 'lucide-react';
+import { api } from '../config/api';
 
 interface Quota {
     videos_generated: number;
@@ -15,7 +16,7 @@ export const Status = () => {
     useEffect(() => {
         const fetchStatus = async () => {
             try {
-                const { data } = await axios.get('http://localhost:8000/api/status');
+                const { data } = await axios.get(api.status());
                 setQuota(data.quota);
             } catch (e) {
                 console.error("Failed to fetch status");

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Wand2, Loader2 } from 'lucide-react';
 import axios from 'axios';
+import { api } from '../config/api';
 
 export const Generator = () => {
     const [prompt, setPrompt] = useState('');
@@ -15,7 +16,7 @@ export const Generator = () => {
         setStatus('queueing');
 
         try {
-            await axios.post('http://localhost:8000/api/generate', {
+            await axios.post(api.generate(), {
                 prompt,
                 force: true
             });

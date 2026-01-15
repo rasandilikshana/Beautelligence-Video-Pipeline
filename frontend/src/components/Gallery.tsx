@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Play } from 'lucide-react';
+import { api } from '../config/api';
 
 interface Video {
     id: string;
@@ -20,7 +20,7 @@ export const Gallery = () => {
 
     const fetchVideos = async () => {
         try {
-            const { data } = await axios.get('http://localhost:8000/api/videos');
+            const { data } = await axios.get(api.videos());
             setVideos(data);
         } catch (e) {
             console.error(e);
@@ -33,6 +33,11 @@ export const Gallery = () => {
         return () => clearInterval(interval);
     }, []);
 
+    // Filter to only show complete videos with valid file paths
+    const validVideos = videos.filter(video =>
+        video.status === 'complete' && video.video_file_path
+    );
+
     return (
         <section className="py-16 container mx-auto px-4">
             <div className="mb-12">
@@ -44,28 +49,19 @@ export const Gallery = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {videos.map((video) => (
+                {validVideos.map((video) => (
                     <div key={video.id} className="bg-surface border border-white/5 rounded-2xl overflow-hidden group hover:border-white/20 transition-all">
                         <div className="aspect-[9/16] bg-black/50 relative">
-                            {video.video_file_path ? (
-                                <video
-                                    src={`http://localhost:8000/data/videos/${video.video_file_path.split('/').pop()}`}
-                                    className="w-full h-full object-cover"
-                                    controls
-                                    loop
-                                    muted
-                                    crossOrigin="anonymous"
-                                />
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-gray-600">
-                                    Processing...
-                                </div>
-                            )}
-
-                            {/* Overlay */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <Play className="w-12 h-12 text-white fill-white" />
-                            </div>
+                            <video
+                                src={api.videoFile(video.video_file_path.split('/').pop() || '')}
+                                className="w-full h-full object-cover cursor-pointer"
+                                controls
+                                loop
+                                playsInline
+                                preload="metadata"
+                            >
+                                Your browser does not support video playback.
+                            </video>
                         </div>
 
                         <div className="p-4">
@@ -82,8 +78,7 @@ export const Gallery = () => {
                             </div>
                             <div className="flex justify-between items-center text-xs text-gray-500">
                                 <span>{new Date(video.created_at).toLocaleDateString()}</span>
-                                <span className={`px-2 py-1 rounded-full ${video.status === 'complete' ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'
-                                    }`}>
+                                <span className="px-2 py-1 rounded-full bg-green-500/10 text-green-400">
                                     {video.status}
                                 </span>
                             </div>
@@ -91,6 +86,13 @@ export const Gallery = () => {
                     </div>
                 ))}
             </div>
+
+            {validVideos.length === 0 && (
+                <div className="text-center py-20 text-gray-500">
+                    <p className="text-lg mb-2">No videos yet</p>
+                    <p className="text-sm">Generate your first video above!</p>
+                </div>
+            )}
         </section>
     );
 };
